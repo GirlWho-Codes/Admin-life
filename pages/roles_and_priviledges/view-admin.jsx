@@ -25,7 +25,7 @@ import {SearchBox, SVG} from '../../components'
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
-import { withStyles } from "@material-ui/styles";
+
 
 
 /**
@@ -526,50 +526,7 @@ export default function RolesAndPriviledges({viewData}) {
                   menuItems={['Super Admin', 'create-admin', 'view-admin', 'edit-admin', 'delete-admin', 'restore-admin']}
                   setState={setPrivileges}
                   value={privileges}
-               />
-         {/* <FormControlLabel
-        control={
-         <CustomCheckbox
-           checked={checkbox1}
-           onChange={() => setCheckbox1(!checkbox1)}
-           value={privileges}
-           setState={setPrivileges}
-         />
-        }
-        label="Update transaction"
-      />
-      <FormControlLabel
-        control={
-         <CustomCheckbox
-           checked={checkbox2}
-           onChange={() => setCheckbox2(!checkbox2)}
-           value={privileges}
-           setState={setPrivileges}
-         />
-        }
-        label="Edit administration"
-      />
-      <FormControlLabel
-        control={
-         <CustomCheckbox
-           checked={checkbox3}
-           onChange={() => setCheckbox3(!checkbox3)}
-           setState={setPrivileges}
-         />
-        }
-        label="Add user"
-      />
-
-   <FormControlLabel
-       control={
-         <CustomCheckbox
-           checked={checkbox4}
-           onChange={() => setCheckbox4(!checkbox4)}
-           setState={setPrivileges}
-         />
-        }
-        label="Disable user"
-      /> */}
+      
      
          </div>
      
