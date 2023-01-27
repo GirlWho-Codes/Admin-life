@@ -47,7 +47,7 @@ const Sidebar = ({ isSideBarOpen, setIsSideBarOpen }) => {
             <SVG.Logo width='91.2' />
 
             <ul className='space-y-4 lg:space-y-4 mt-10 lg:mt-16'>
-               <NavItem icon={<SVG.Home />} label='Home' link='/' />
+               <NavItem icon={<SVG.Home />} label='Home' link='/dashboard' />
                <NavItem icon={<SVG.Users />} label='Users' />
                <NavItem icon={<SVG.Products />} label='Products' />
                <NavItem icon={<SVG.Transactions />} label='Transactions' />

@@ -1,13 +1,65 @@
-import { DataTable, Layout } from "../components";
+import { useState } from "react";
+import { DataTable, Layout, Modals, LabelInput } from "../../components";
 import Image from "next/image";
-import ToyAvatar from '../assets/img/toy-avatar.png'
-import person1 from '../assets/img/person1.png'
-import { AvatarGroup } from "@mui/material";
+// import ToyAvatar from '../assets/img/toy-avatar.png'
+// import person1 from '../assets/img/person1.png'
+// import { AvatarGroup } from "@mui/material";
 import { useMemo } from "react";
-import { GroupAvatars } from "../components/Avatars";
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { GroupAvatars } from "../../components/Avatars";
+import { useRouter } from "next/router";
 
 
 export default function RolesAndPriviledges() {
+    const router = useRouter()
+    const [username, setUsername] = useState("iversonweb98@gmail.com")
+    const [password, setPassword] = useState("Be@trice1")
+    const [name, setName] = useState("User Relations")
+    const [privileges, setPrivileges] = useState(1)
+    const [modalOpen, setModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [priviledges, setPriviledges] = useState(1)
+    
+    const handleAddNewRole = async () => {
+        setLoading(true);
+        const bearerToken = process.env.NEXT_PUBLIC_BEARER_TOKEN;
+        const deviceToken = process.env.NEXT_PUBLIC_DEVICE_TOKEN;
+        const instance = axios.create({
+            baseURL: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+            headers: {
+               Authorization: `Bearer ${bearerToken}`,
+               "device-token": deviceToken
+            }
+         });
+         const data = {
+            name,
+            privileges
+            
+         };
+
+         await instance
+      .post(`api/v1/admin/add-role`, data)
+      .then((res) => {
+        console.log(res.data);
+        setLoading(false);
+        setModalOpen(false);
+      
+         toast.success("Successful");
+        router.push("/roles_and_priviledges/view-admin")
+         return res.data
+     })
+     .catch((err) => {
+        setLoading(false);
+        setModalOpen(false);
+        console.log(err);
+        toast.error(err.response?.data.message);
+        
+     });  
+     
+     
+    }
+
     const RoleComponent = ({role}) => {
         return (
             <div className="p-3 col-span-1 rounded-xl h-full border-2 border-[#F7F5E4]">
@@ -83,12 +135,17 @@ export default function RolesAndPriviledges() {
                 <RoleComponent role={'Implementor'} />
                 <RoleComponent role={'Tester'} />
                 <div className="p-5 col-span-1 flex flex-col items-center justify-center gap-5 rounded-xl h-full border-2 border-[#F7F5E4]">
-                    <span>
+                    <span
+                    onClick={() => setModalOpen(true)}
+                    >
+
                         <svg width="32" height="32" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path fillRule="evenodd" clipRule="evenodd" d="M14 0.285156C14.9468 0.285156 15.7143 1.05267 15.7143 1.99944V12.2852H26C26.9468 12.2852 27.7143 13.0527 27.7143 13.9994C27.7143 14.9462 26.9468 15.7137 26 15.7137H15.7143V25.9994C15.7143 26.9462 14.9468 27.7137 14 27.7137C13.0532 27.7137 12.2857 26.9462 12.2857 25.9994V15.7137H1.99999C1.05322 15.7137 0.285706 14.9462 0.285706 13.9994C0.285706 13.0527 1.05322 12.2852 1.99999 12.2852H12.2857V1.99944C12.2857 1.05267 13.0532 0.285156 14 0.285156Z" fill="#FF4500" />
                         </svg>
                     </span>
-                    <h3 className="mb-5 text-[#0B0B0B] text-base md:text-lg lg:text-xl font-normal lg:leading-[30px]">Add new role</h3>
+                    <h3 
+                    
+                    className="mb-5 text-[#0B0B0B] text-base md:text-lg lg:text-xl font-normal lg:leading-[30px]">Add new role</h3>
                 </div>
             </div>
 
@@ -102,6 +159,41 @@ export default function RolesAndPriviledges() {
                     <DataTable columns={columns} data={data} />
                 </div>
             </div>
+
+            <Modals
+            open={modalOpen}
+            setOpen={setModalOpen}
+            loading={loading}
+            title='Add New Role'
+            buttonLabel='Continue'
+            onClick={handleAddNewRole}
+         >
+            <>
+               <LabelInput
+                  label='username'
+                  placeholder='Username'
+                  value={username}
+                  setState={setUsername}
+               />
+               
+                  <LabelInput
+                     label='Role'
+                     placeholder='Your role'
+                     value={name}
+                     setState={setName}
+                  />
+                  <LabelInput
+                  label='Priviledges'
+                  combo
+                  menuItems={['Tester', 'Admin', 'Add User', 'Disable User']}
+                  setState={setPriviledges}
+                  value={priviledges}
+               />
+                 
+
+                
+            </>
+         </Modals>
         </Layout>
     )
 }

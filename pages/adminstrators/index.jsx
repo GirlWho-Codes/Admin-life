@@ -18,8 +18,11 @@ import {
    Modals,
    SearchBox,
    SVG,
-} from '../components';
-import { tableSearch } from '../utils/tableSearch';
+} from '../../components';
+import Link from 'next/link';
+import { Menu, MenuItem } from '@mui/material';
+import { useRouter } from 'next/router';
+import { tableSearch } from '../../utils/tableSearch';
  
 /**
  * This is a getServerSideProps function thats help fetch users from server before the page loads
@@ -66,6 +69,7 @@ export async function getServerSideProps() {
 }
 
 const Administrator = ({ status, adminData }) => {
+   const router = useRouter();
    const [open, setOpen] = React.useState(false);
    const [firstName, setFirstName] = React.useState('Wale');
    const [lastName, setLastName] = React.useState('Andrew');
@@ -79,8 +83,121 @@ const Administrator = ({ status, adminData }) => {
    const [gender, setGender] = React.useState('male');
    const [loading, setLoading] = React.useState(false);
    const [searchResult, setSearchResult] = useState([]);
+   const [modalOpen, setModalOpen] = useState(false);
    const searchTerm = useSelector((state) => state.searchTerm);
    
+
+   function BasicMenu({ viewLink = '', id = '' }) {
+      const [anchorEl, setAnchorEl] = React.useState(null);
+
+      const open = Boolean(anchorEl);
+
+      const handleClick = (event) => {
+         setAnchorEl(event.currentTarget);
+      };
+
+      const handleClose = () => {
+         setAnchorEl(null);
+      };
+
+
+      const handleDeactivateAccount = async () => {
+         setAnchorEl(null);
+        
+         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+         const bearerToken = process.env.NEXT_PUBLIC_BEARER_TOKEN;
+         const deviceToken = process.env.NEXT_PUBLIC_DEVICE_TOKEN;
+
+         const instance = axios.create({
+            baseURL: `${baseUrl}`,
+            headers: {
+               Authorization: `Bearer ${bearerToken} `,
+               "device-token": deviceToken
+            }
+         });
+        
+         await instance
+            .post(`/api/v1/admin/users/delete/${id}`, {status: 'deactivated'})
+            
+            .then((res) => {
+               console.log(res);
+               
+               router.replace(router.asPath)
+               toast.success('User deactivated successfully');
+               
+
+               return res.data
+               
+            })
+            .catch((err) => {
+               console.log(err);
+              
+            });
+      };
+
+      return (
+         <div>
+            <IconButton
+               className='p-2'
+               aria-controls={open ? 'basic-menu' : undefined}
+               aria-haspopup='true'
+               aria-expanded={open ? 'true' : undefined}
+               onClick={handleClick}
+            >
+               <SVG.DotsHambugger />
+            </IconButton>
+            <Menu
+               anchorEl={anchorEl}
+               open={open}
+               onClose={handleClose}
+               MenuListProps={{
+                  'aria-labelledby': 'basic-button',
+               }}
+               sx={{
+                  '& .MuiList-root': {
+                     padding: 0,
+                  },
+               }}
+            >
+               <div className='flex'>
+                  <MenuItem onClick={handleClose} className='p-0'>
+                     <Link href={viewLink}>
+                        <a className='p-4'>
+                           <SVG.View />
+                        </a>
+                     </Link>
+                  </MenuItem>
+                  <MenuItem onClick={handleDeactivateAccount}>
+                     <SVG.Delete />
+                  </MenuItem>
+                  <MenuItem
+                     onClick={() => {
+                        handleClose();
+                        setModalOpen(true);
+
+                        let item = adminData.filter(
+                           (item) => item.id === id
+                        );
+
+                        setFirstName(item[0].first_name);
+                        setLastName(item[0].last_name);
+                        setGender(item[0].gender.toLowerCase());
+                        setPhoneNumber(item[0].phone_number);
+                        setEmail(item[0].email);
+                        setPassword(item[0].password);
+                        setPassword(item[0].role_id);
+                        setId(item[0].profile_photo);
+                     }}
+                  >
+                    
+                        
+                     <SVG.Edit />
+                  </MenuItem>
+               </div>
+            </Menu>
+         </div>
+      );
+   }
 
    const columns = React.useMemo(
       () => [
@@ -112,6 +229,13 @@ const Administrator = ({ status, adminData }) => {
             Header: 'Date Joined',
             accessor: 'dateJoined',
          },
+         {
+            Header: 'Action',
+            accessor: 'action',
+            Cell: ({ value }) => (
+               <BasicMenu id={value} viewLink={`/adminstrators/${value}`} />
+            ),
+         },
       ],
       []
    );
@@ -120,7 +244,7 @@ const Administrator = ({ status, adminData }) => {
     * Datagrid row data
     */
    let rows;
-   console.log(adminData)
+   
    // check if agentsData is an array
    if (typeof adminData === 'object' && Array.isArray(adminData) ) {
       rows = adminData?.map((item) => {
@@ -129,6 +253,7 @@ const Administrator = ({ status, adminData }) => {
             role: item.role.name,
             email: item.email,
             dateJoined: item.null, //'Today, 2:14pm',
+            action: item.id
          };
       });
    } else {
@@ -177,8 +302,9 @@ const Administrator = ({ status, adminData }) => {
        setLoading(false)
        setOpen(false);
          console.log(response.data);   
-          toast.success(response.data.data.message);
-         
+         router.replace(router.asPath)
+          toast.success("Admin created successfully");
+            router.replace(router.asPath)
            return response;
           
    }catch(error){

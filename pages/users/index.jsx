@@ -15,7 +15,9 @@ import {
 } from '../../components';
 import { DataTable } from '../../components/Table';
 import { tableSearch } from '../../utils/tableSearch';
-import Router from 'next/router';
+import LoadingState from '../../components/LoadingState';
+import Router, { useRouter } from 'next/router';
+
 
 /**
  * This is a getServerSideProps function thats help fetch users from server before the page loads
@@ -24,6 +26,7 @@ export async function getServerSideProps() {
    const bearerToken = process.env.NEXT_PUBLIC_BEARER_TOKEN;
       const deviceToken = process.env.NEXT_PUBLIC_DEVICE_TOKEN;
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+      
       const res = await axios.get(
                `${baseUrl}/api/v1/admin/users`,
                {
@@ -35,17 +38,18 @@ export async function getServerSideProps() {
                
             )
             .then((res) => {
-               
+              
                return{
+                 
                   props: {
-                     userData: res.data.data
+                     userData: res.data?.data
                   }
                   
                }
                
             })
             .catch((error) => {
-               
+             
                return{
                   props: {
                      userData: null
@@ -60,6 +64,8 @@ export async function getServerSideProps() {
 
 
 export default function Users({userData}) {
+   const router= useRouter()
+   console.log(userData)
    const [searchResult, setSearchResult] = useState([]);
    const [modalOpen, setModalOpen] = React.useState(false);
    const [loading, setLoading] = React.useState(false);
@@ -70,9 +76,12 @@ export default function Users({userData}) {
    const [email, setEmail] = React.useState('waleAn@gmail.com');
    const [gender, setGender] = React.useState('male');
    const [id, setId] = React.useState();
-   const [editData, setEditData] = useState(userData)
+   const [success, setSuccess] = useState(false);
+   const [data, setData] = useState();
+   const [selected, setSelected] = useState();
+   const [edited, setEdited] = useState();
    const searchTerm = useSelector((state) => state.searchTerm);
-   const [update, setUpdate] = useState(false);
+   const [loadingState, setLoadingState] = useState(true);
 
    /** function to handle each user actions  */
    function BasicMenu({ viewLink = '', id = '' }) {
@@ -88,15 +97,10 @@ export default function Users({userData}) {
          setAnchorEl(null);
       };
 
-      useEffect(() => {
-         if(update) {
-            getServerSideProps()
-         }
-      }, [update])
 
       const handleDeactivateAccount = async () => {
          setAnchorEl(null);
-
+         setLoadingState(true)
          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
          const bearerToken = process.env.NEXT_PUBLIC_BEARER_TOKEN;
          const deviceToken = process.env.NEXT_PUBLIC_DEVICE_TOKEN;
@@ -108,14 +112,18 @@ export default function Users({userData}) {
                "device-token": deviceToken
             }
          });
+        
          await instance
-            .post(`/api/v1/admin/users/delete/${id}`)
+            .post(`/api/v1/admin/users/delete/${id}`, {status: 'deactivated'})
+            
             .then((res) => {
                console.log(res);
+               setLoadingState(true)
+               router.replace(router.asPath)
                toast.success('User deactivated successfully');
-               res.status(200).json(response.data);
-              setUpdate(true);
-               return res
+               
+
+               return res.data
                
             })
             .catch((err) => {
@@ -240,10 +248,10 @@ export default function Users({userData}) {
    let rows;
    // check if agentsData is an array
    console.log(userData.users)
-   if (typeof editData === 'object' &&
-   editData.users &&
-   Array.isArray(editData.users)) {
-      rows = editData?.users.map((item) => {
+   if (typeof userData === 'object' &&
+   userData.users &&
+   Array.isArray(userData.users)) {
+      rows = userData?.users.map((item) => {
          return {
             name: item.name,
             email: item.email,
@@ -300,24 +308,9 @@ export default function Users({userData}) {
          setLoading(false);
          setModalOpen(false);
          
-         useEffect(() => {
-            const updatedUserData = editData?.users.map((prevData) => {
-               if(prevData.id === id){
-                  return {...prevData, ...res.data}
-               }
-             return prevData            
-              
-            });
-            setEditData(updatedUserData);
-         
-          
-         }, [editData])
-         
-      
-          toast.success(res.data.data.message);
-          toast.success(res.data.data.device_message);
-      
-         // console.log(updatedUserData)
+          setLoadingState(true)
+          toast.success("User Updated Successfully");
+         router.replace(router.asPath)
           return res.data
       })
       .catch((err) => {
@@ -331,11 +324,6 @@ export default function Users({userData}) {
       
    };
 
-   useEffect(() => {
-  
-   
-    
-   }, [userData?.users, update])
    
    // console.log(editData)
    /* UseEffect */
@@ -350,10 +338,12 @@ export default function Users({userData}) {
    }, [userData?.users, searchTerm]);
 
    return (
+      
       <Layout title={'Users'}>
          <SubPageHeader label={'Users'} />
 
          <div className='w-full py-5'>
+            
             <DataTable
                columns={columns}
                data={searchTerm ? searchResult : rows}

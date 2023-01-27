@@ -64,7 +64,7 @@ export default function Login() {
 
    };
    const handleGoogleLogin = async() => {
-      signIn('google', {callbackUrl: "http://localhost:3000"})
+      signIn('google', {callbackUrl: "https://www.controls.lifesavers.ng/dashboard"})
       if(session) {
          toast.success(`Welcome, ${session.user.name}`)
         
