@@ -288,33 +288,26 @@ const Administrator = ({ status, adminData }) => {
       formData.append("email", email)
       formData.append("password", password)
       formData.append("role_id", role)
-      formData.append("profile_photo", fileOn)
-   
-   try{
+      formData.append("profile_photo", fileOn);
+      
       await instance
-       .post(`/api/v1/admin/register`, formData, {
-         headers: { 
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_BEARER_TOKEN}`,
-            "device-token": `${process.env.NEXT_PUBLIC_DEVICE_TOKEN}`
-         },
-       });
-       setLoading(false)
-       setOpen(false);
-         console.log(response.data);   
-         router.replace(router.asPath)
-          toast.success("Admin created successfully");
+       .post(`/api/v1/admin/register`, formData)
+       .then((res) => {
+            setLoading(false)
+            setOpen(false);
+            toast.success("Admin created successfully");
             router.replace(router.asPath)
-           return response;
+            return res.data
+            
+       })
+         .catch((error) => {
+            setLoading(false)
+            setOpen(false);
+            toast.error(error.response?.data.message);
+            return error.response
+         }
           
-   }catch(error){
-          setLoading(false);
-          setOpen(false);
-          console.log(error);
-          toast.error(error.response?.data.message);
-          return error.response
-          
-       }; 
+         );
    
        
    };
